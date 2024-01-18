@@ -1,3 +1,4 @@
+import 'package:fixmystreet/src/features/map/controllers/map_controller.dart';
 import 'package:fixmystreet/src/features/map/map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -41,9 +42,7 @@ class _LoadingScreenState extends State<LoadingScreen> with TickerProviderStateM
 
   Future<void> _initLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+        // MapControllerHelper.displayCurrentLocation();
       setState(() {
         _isLocationFound = true;
       });

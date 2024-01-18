@@ -37,18 +37,18 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  flutter_osm_plugin: ^0.70.0
+  flutter_osm_plugin: ^0.70.4
   geolocator : ^10.1.0
-  open_street_map_search_and_pick: ^0.1.0
-  latlong2: ^0.8.2
-  flutter_map: ^3.1.0
-  http: ^0.13.6
-  permission_handler: ^11.1.0
-  shimmer: ^3.0.0
+  latlong2: ^0.9.0
+  flutter_map: ^6.1.0
+  http: ^1.0.0
   flutter_bloc: ^8.1.3
   equatable: ^2.0.5
   bloc: ^8.1.2
   pointer_interceptor: ^0.10.0
+  url_launcher: ^6.2.3
+  dio: ^5.4.0
+  provider: ^6.1.1
 
 
 dev_dependencies:
@@ -71,6 +71,10 @@ flutter:
   assets:
     - lib/src/assets/images/
     - lib/src/assets/images/show-pins-link.png
+  fonts:
+    - family: MyFlutterApp
+      fonts:
+        - asset: lib/src/assets/fonts/MyFlutterApp.ttf
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
