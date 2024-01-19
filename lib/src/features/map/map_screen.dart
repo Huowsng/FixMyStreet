@@ -1,8 +1,13 @@
+import 'package:fixmystreet/src/assets/icons/icon.dart';
 import 'package:fixmystreet/src/component/wiget_icon.dart';
+import 'package:fixmystreet/src/features/help/help_screen.dart';
 import 'package:fixmystreet/src/features/map/controllers/map_controller.dart';
 import 'package:fixmystreet/src/features/map/modules/map_search.dart';
+import 'package:fixmystreet/src/models/map_states.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:provider/provider.dart';
+
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -12,7 +17,6 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   bool isLocationAvailable = false;
-  bool showMarkerDetail = false;
   String selectedPinId = '';
   String selectedPinTitle = '';
   GeoPoint selectedPoint = GeoPoint(latitude: 0, longitude: 0);
@@ -31,8 +35,15 @@ class _MapScreenState extends State<MapScreen> {
       mapController.mapController.osmBaseController.getZoom();
       mapController.displayCurrentLocation();
       await Future.delayed(const Duration(seconds: 5));
-      mapController.getData();
-      mapController.getReport();
+      mapController.mapController.listenerRegionIsChanging
+          .addListener(() async {
+        if (mapController.mapController.listenerRegionIsChanging.value !=
+            null) {
+          mapController.getData();
+          await Future.delayed(const Duration(seconds: 1));
+          mapController.getReport();
+        }
+      });
       print("Time Current: ${DateTime.now().millisecond}");
       print("Time max: $endLate");
       return;
@@ -50,6 +61,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool showHelpScreen = Provider.of<MapState>(context).showHelpScreen;
     double screenWidth = MediaQuery.of(context).size.width;
     // Brightness currentBrightness = MediaQuery.of(context).platformBrightness;
     return Scaffold(
@@ -187,14 +199,23 @@ class _MapScreenState extends State<MapScreen> {
           Positioned(
             top: 70,
             right: 0,
-            left: screenWidth - 40,
-            child: IconButton(
-              icon: Icon(
-                Icons.help_center,
-                color: Color.fromARGB(255, 200, 181, 9),
-                size: 45,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  Provider.of<MapState>(context, listen: false)
+                  .setShowHelpScreen(true);
+                });
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Color.fromARGB(255, 247, 200, 73), // Đặt góc bo
+                ),
+                width: 25,
+                height: 50,
+                child: const Icon(MyFlutterApp.help,
+                    color: Colors.grey, size: 25.0),
               ),
-              onPressed: () {},
             ),
           ),
           Positioned(
@@ -205,6 +226,11 @@ class _MapScreenState extends State<MapScreen> {
               child: MapSearch(),
             ),
           ),
+          Visibility(
+            visible: showHelpScreen,
+            child: const Positioned(
+              child: HelpScreen(),
+          ))
         ],
       ),
     );
@@ -263,7 +289,6 @@ class _MapScreenState extends State<MapScreen> {
           selectedPoint = geoPoint;
           selectedPinId = id;
           selectedPinTitle = title;
-          showMarkerDetail = true;
         });
       }
     }
