@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:provider/provider.dart';
 
-
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
   @override
@@ -63,6 +62,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     bool showHelpScreen = Provider.of<MapState>(context).showHelpScreen;
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     // Brightness currentBrightness = MediaQuery.of(context).platformBrightness;
     return Scaffold(
       appBar: AppBar(
@@ -203,13 +203,14 @@ class _MapScreenState extends State<MapScreen> {
               onTap: () {
                 setState(() {
                   Provider.of<MapState>(context, listen: false)
-                  .setShowHelpScreen(true);
+                      .setShowHelpScreen(true);
+                  print(showHelpScreen);
                 });
               },
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: Color.fromARGB(255, 247, 200, 73), // Đặt góc bo
+                  color: Color.fromARGB(255, 211, 190, 7), // Đặt góc bo
                 ),
                 width: 25,
                 height: 50,
@@ -227,10 +228,40 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           Visibility(
-            visible: showHelpScreen,
-            child: const Positioned(
-              child: HelpScreen(),
-          ))
+              visible: showHelpScreen,
+              child: const Positioned(
+                child: HelpScreen(),
+              )),
+          Positioned(
+              bottom: 20,
+              right: 20,
+              left: 20,
+              child: GestureDetector(
+                onTap: () => print("abc"),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 211, 190, 7),
+                    border: Border.all(
+                      color: Colors.black, // Màu sắc của đường viền
+                      width: 0.5, // Độ dày của đường viền
+                    ),
+                    borderRadius: BorderRadius.circular(15)
+                  ),
+                  width: screenWidth,
+                  height: 50,
+                  // color: Color.fromARGB(255, 211, 190, 7),
+                  child: const Center(
+                    child: Text(
+                      "Báo cáo mới tại đây",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ))
         ],
       ),
     );
