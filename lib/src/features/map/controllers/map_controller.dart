@@ -16,9 +16,11 @@ class MapControllerHelper {
     return _instance;
   }
   MapControllerHelper._internal() {
-    mapController = MapController(initMapWithUserPosition: const UserTrackingOption(enableTracking: true, unFollowUser: false));
+    mapController = MapController(
+        initMapWithUserPosition: const UserTrackingOption(
+            enableTracking: true, unFollowUser: false));
   }
-  
+
   Future<void> displayCurrentLocation() async {
     final location = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -28,21 +30,24 @@ class MapControllerHelper {
         .changeLocation(GeoPoint(latitude: latitude, longitude: longitude));
     mapController.enableTracking(disableUserMarkerRotation: false);
     mapController.setZoom(zoomLevel: 17);
-
   }
 
   Future<void> currentLocation() async {
     mapController.enableTracking();
     mapController.currentLocation();
     mapController.setZoom(zoomLevel: 14);
-
   }
-  
 
   Future<void> changeLocation(lat, long) async {
     mapController.changeLocation(GeoPoint(latitude: lat, longitude: long));
     await mapController.setZoom(zoomLevel: 17);
   }
+
+  Future<void> getCenterMap() async {
+    GeoPoint center_map = await mapController.centerMap;
+    print(center_map);
+  }
+
   Future<List<dynamic>> getData() async {
     try {
       double zoom = await mapController.getZoom();
@@ -50,7 +55,8 @@ class MapControllerHelper {
       print(zoom);
       print(bounds);
       final response = await http.get(Uri.parse(
-          'http://103.179.189.246:8000/reports/FMS+Th%C3%A0nh+Ph%E1%BB%91+%C4%90%C3%A0+N%E1%BA%B5ng?ajax=1&sort=updated-desc&p=1&zoom=$zoom&bbox=${bounds.north},${bounds.east},${bounds.south},${bounds.west},' ,));
+        'http://103.179.189.246:8000/reports/FMS+Th%C3%A0nh+Ph%E1%BB%91+%C4%90%C3%A0+N%E1%BA%B5ng?ajax=1&sort=updated-desc&p=1&zoom=$zoom&bbox=${bounds.north},${bounds.east},${bounds.south},${bounds.west},',
+      ));
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
         final pins = data['pins'];
@@ -105,7 +111,7 @@ class MapControllerHelper {
     }
   }
 
-  Future<void> RemoveMaker() async {
+  Future<void> removeReport() async {
     mapController.removeMarkers(ListGeoPoint);
   }
 }

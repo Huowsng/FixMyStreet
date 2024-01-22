@@ -1,12 +1,16 @@
+import 'package:fixmystreet/main.dart';
 import 'package:fixmystreet/src/assets/icons/icon.dart';
-import 'package:fixmystreet/src/component/wiget_icon.dart';
+import 'package:fixmystreet/src/component/appbar_widget.dart';
+import 'package:fixmystreet/src/component/icon_widget.dart';
 import 'package:fixmystreet/src/features/help/help_screen.dart';
 import 'package:fixmystreet/src/features/map/controllers/map_controller.dart';
 import 'package:fixmystreet/src/features/map/modules/map_search.dart';
-import 'package:fixmystreet/src/models/map_states.dart';
+import 'package:fixmystreet/src/providers/map_states.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:provider/provider.dart';
+
+import '../../providers/appbar_states.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -15,12 +19,15 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  double screenHeight = 0.0;
+  double screenWidth = 0.0;
   bool isLocationAvailable = false;
   String selectedPinId = '';
   String selectedPinTitle = '';
   GeoPoint selectedPoint = GeoPoint(latitude: 0, longitude: 0);
   int startLate = 0;
   int endLate = 0;
+  int currentAppBarState = 1;
   MapControllerHelper mapController = MapControllerHelper();
   setDataControllerMap(int timeout) {
     startLate = DateTime.now().millisecond;
@@ -29,6 +36,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   setDataLate() async {
+    await Future.delayed(const Duration(seconds: 3));
     if (DateTime.now().millisecond > endLate) return;
     try {
       mapController.mapController.osmBaseController.getZoom();
@@ -38,6 +46,9 @@ class _MapScreenState extends State<MapScreen> {
           .addListener(() async {
         if (mapController.mapController.listenerRegionIsChanging.value !=
             null) {
+          setState(() {
+            Provider.of<MapState>(context, listen: false).setShowIcon(true);
+          });
           mapController.getData();
           await Future.delayed(const Duration(seconds: 1));
           mapController.getReport();
@@ -61,98 +72,26 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     bool showHelpScreen = Provider.of<MapState>(context).showHelpScreen;
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    bool showIcon = Provider.of<MapState>(context).showIcon;
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
+    double appBarHeight = kToolbarHeight;
+    double bodyHeight = screenHeight - appBarHeight;
     // Brightness currentBrightness = MediaQuery.of(context).platformBrightness;
     return Scaffold(
-      appBar: AppBar(
-        leading: Container(
-          width: screenWidth * 0.33,
-          margin: EdgeInsets.only(
-              left: screenWidth * 0.02, bottom: screenWidth * 0.02),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(0),
-            color: Color.fromARGB(255, 228, 197, 61),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-            child: GestureDetector(
-              onTap: () {
-                // Xử lý khi nhấn vào phần leading
-                print('leading clicked');
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Expanded(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Tài khoản',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.account_circle),
-                    onPressed: () {
-                      // Xử lý khi nhấn vào biểu tượng tài khoản
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(appBarHeight),
+        child: Builder(
+          builder: (BuildContext appBarContext) {
+            // Access the provider to get the current app bar state
+            currentAppBarState = Provider.of<AppBarStateManager>(appBarContext)
+                .appBarState
+                .state;
+
+            // Build the app bar based on the current state
+            return buildAppBar(currentAppBarState);
+          },
         ),
-        centerTitle: true,
-        title: Container(
-          width: screenWidth * 0.33, // 1/3 của AppBar
-          child: Text(
-            'FixMyStreet',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        backgroundColor: Color.fromARGB(255, 247, 200, 73),
-        actions: <Widget>[
-          Container(
-            width: screenWidth * 0.29,
-            height: screenWidth * 0.1,
-            margin: EdgeInsets.only(
-                right: screenWidth * 0.02, bottom: screenWidth * 0.02),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(0),
-              color: Color.fromARGB(255, 228, 197, 61),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              child: GestureDetector(
-                onTap: () {
-                  // Handle the onPressed event for the padding area
-                  mapController.currentLocation();
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.account_circle),
-                      onPressed: () {},
-                    ),
-                    const Expanded(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Tài khoản',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -204,7 +143,8 @@ class _MapScreenState extends State<MapScreen> {
                 setState(() {
                   Provider.of<MapState>(context, listen: false)
                       .setShowHelpScreen(true);
-                  print(showHelpScreen);
+                  Provider.of<MapState>(context, listen: false)
+                      .setShowIcon(false);
                 });
               },
               child: Container(
@@ -237,16 +177,20 @@ class _MapScreenState extends State<MapScreen> {
               right: 20,
               left: 20,
               child: GestureDetector(
-                onTap: () => print("abc"),
+                onTap: () => {
+                  changeAppBarState(context, 2),
+                  mapController.getCenterMap(),
+                  Provider.of<MapState>(context, listen: false)
+                      .setShowIcon(false),
+                },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 211, 190, 7),
-                    border: Border.all(
-                      color: Colors.black, // Màu sắc của đường viền
-                      width: 0.5, // Độ dày của đường viền
-                    ),
-                    borderRadius: BorderRadius.circular(15)
-                  ),
+                      color: Color.fromARGB(255, 211, 190, 7),
+                      border: Border.all(
+                        color: Colors.black, // Màu sắc của đường viền
+                        width: 0.5, // Độ dày của đường viền
+                      ),
+                      borderRadius: BorderRadius.circular(15)),
                   width: screenWidth,
                   height: 50,
                   // color: Color.fromARGB(255, 211, 190, 7),
@@ -261,7 +205,21 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                 ),
-              ))
+              )),
+          Visibility(
+            visible: showIcon,
+            child: Positioned(
+              top: (bodyHeight - 125) /
+                  2, // (Chiều cao màn hình - Chiều cao icon) / 2
+              left: (screenWidth - 75) /
+                  2, // (Chiều rộng màn hình - Chiều rộng icon) / 2
+              child: Image.asset(
+                'lib/src/assets/images/crosshairs@x2.png',
+                width: 75,
+                height: 75,
+              ),
+            ),
+          )
         ],
       ),
     );
@@ -323,5 +281,83 @@ class _MapScreenState extends State<MapScreen> {
         });
       }
     }
+  }
+
+  void changeAppBarState(BuildContext context, int newState) {
+    // Use the provider to update the app bar state
+    Provider.of<AppBarStateManager>(context, listen: false)
+        .setAppBarState(newState);
+  }
+
+  AppBar buildAppBar(int state) {
+    switch (state) {
+      case 1:
+        return buildAppBarState1();
+      case 2:
+        return buildAppBarState2();
+      case 3:
+        return buildAppBarState3();
+      case 4:
+        return buildAppBarState4();
+      case 5:
+        return buildAppBarState5();
+      // ... thêm các trạng thái app bar khác ...
+      default:
+        return buildAppBarState1();
+    }
+  }
+
+  AppBar buildAppBarState1() {
+    return AppBar(
+      leading: buildAppBarLeadingDefault(screenWidth, screenHeight),
+      centerTitle: true,
+      title: buildAppBarTitle(screenWidth),
+      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      actions: <Widget>[
+        buildAppBarAcctionDefault(screenWidth, screenHeight),
+      ],
+    );
+  }
+
+  AppBar buildAppBarState2() {
+    return AppBar(
+      leading: buildAppBarLeadingBack(screenWidth, screenHeight),
+      centerTitle: true,
+      title: buildAppBarTitle(screenWidth),
+      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+    );
+  }
+
+  AppBar buildAppBarState3() {
+    return AppBar(
+      leading: buildAppBarLeadingBack(screenWidth, screenHeight),
+      centerTitle: true,
+      title: buildAppBar3(screenWidth),
+      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      actions: <Widget>[
+        buildAppBarAcction3(screenWidth, screenHeight),
+      ],
+    );
+  }
+
+  AppBar buildAppBarState4() {
+    return AppBar(
+      leading: buildAppBarLeadingBack(screenWidth, screenHeight),
+      centerTitle: true,
+      title: buildAppBar4(screenWidth),
+      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      actions: <Widget>[
+        buildAppBarAcction4(screenWidth, screenHeight),
+      ],
+    );
+  }
+
+  AppBar buildAppBarState5() {
+    return AppBar(
+      leading: buildAppBarLeadingBack(screenWidth, screenHeight),
+      centerTitle: true,
+      title: buildAppBar5(screenWidth),
+      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+    );
   }
 }

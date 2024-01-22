@@ -1,4 +1,6 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
-    "dart.flutterSdkPath": "D:\\flutter"
+    "dart.flutterSdkPath": "D:\\flutter",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true
 }

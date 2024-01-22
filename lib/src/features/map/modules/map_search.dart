@@ -3,7 +3,6 @@ import 'package:fixmystreet/src/features/map/controllers/map_controller.dart';
 import 'package:fixmystreet/src/features/map/controllers/search_controller.dart';
 import 'package:flutter/material.dart';
 
-
 class MapSearch extends StatefulWidget {
   const MapSearch({
     Key? key,
@@ -24,6 +23,7 @@ class _SearchState extends State<MapSearch> {
     mapController.mapController;
     // Bạn có thể sử dụng mapController ở đây
   }
+
   @override
   Widget build(BuildContext context) {
     Brightness currentBrightness = MediaQuery.of(context).platformBrightness;
@@ -127,7 +127,7 @@ class _SearchState extends State<MapSearch> {
                   onTap: () {
                     setState(() {
                       if (showPins) {
-                        mapController.RemoveMaker();
+                        mapController.removeReport();
                       } else {
                         mapController.getReport();
                       }
@@ -188,10 +188,8 @@ class _SearchState extends State<MapSearch> {
                           ),
                           child: GestureDetector(
                             onTap: () {
-                              double lat =
-                                  controller.latitudes[index];
-                              double long =
-                                  controller.longitudes[index];
+                              double lat = controller.latitudes[index];
+                              double long = controller.longitudes[index];
                               mapController.changeLocation(lat, long);
                             },
                             child: Text(

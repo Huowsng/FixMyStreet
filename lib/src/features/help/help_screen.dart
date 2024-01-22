@@ -1,4 +1,4 @@
-import 'package:fixmystreet/src/models/map_states.dart';
+import 'package:fixmystreet/src/providers/map_states.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -355,10 +355,11 @@ class _SearchState extends State<HelpScreen>
                   ),
                   onPressed: () {
                     setState(() {
-                      print(showHelpScreen);
                       _animationController.reverse();
                       Provider.of<MapState>(context, listen: false)
                           .setShowHelpScreen(false);
+                      Provider.of<MapState>(context, listen: false)
+                          .setShowIcon(true);
                     });
                   },
                 )),
