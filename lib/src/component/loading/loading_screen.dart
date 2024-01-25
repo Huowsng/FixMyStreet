@@ -1,7 +1,5 @@
-import 'package:fixmystreet/src/features/map/controllers/map_controller.dart';
 import 'package:fixmystreet/src/features/map/map_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({Key? key}) : super(key: key);
@@ -10,7 +8,8 @@ class LoadingScreen extends StatefulWidget {
   _LoadingScreenState createState() => _LoadingScreenState();
 }
 
-class _LoadingScreenState extends State<LoadingScreen> with TickerProviderStateMixin {
+class _LoadingScreenState extends State<LoadingScreen>
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _isLocationFound = false;
@@ -42,7 +41,7 @@ class _LoadingScreenState extends State<LoadingScreen> with TickerProviderStateM
 
   Future<void> _initLocation() async {
     try {
-        // MapControllerHelper.displayCurrentLocation();
+      // MapControllerHelper.displayCurrentLocation();
       setState(() {
         _isLocationFound = true;
       });

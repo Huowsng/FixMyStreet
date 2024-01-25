@@ -49,6 +49,8 @@ dependencies:
   url_launcher: ^6.2.3
   dio: ^5.4.0
   provider: ^6.1.1
+  image_picker: ^1.0.7
+  dropdown_textfield: ^1.0.8
 
 
 dev_dependencies:

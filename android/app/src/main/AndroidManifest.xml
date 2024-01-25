@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
+        android:requestLegacyExternalStorage="true"
         android:label="fixmystreet"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -46,4 +47,6 @@
             <action android:name="android.support.customtabs.action.CustomTabsService" />
         </intent>
     </queries>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 </manifest>

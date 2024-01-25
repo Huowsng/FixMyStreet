@@ -35,7 +35,7 @@ class MapControllerHelper {
   Future<void> currentLocation() async {
     mapController.enableTracking();
     mapController.currentLocation();
-    mapController.setZoom(zoomLevel: 14);
+    mapController.setZoom(zoomLevel: 17);
   }
 
   Future<void> changeLocation(lat, long) async {

@@ -8,10 +8,10 @@ class HelpScreen extends StatefulWidget {
     Key? key,
   }) : super(key: key);
   @override
-  State<HelpScreen> createState() => _SearchState();
+  State<HelpScreen> createState() => _HelpScreenState();
 }
 
-class _SearchState extends State<HelpScreen>
+class _HelpScreenState extends State<HelpScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Offset> _offsetAnimation;
@@ -27,9 +27,9 @@ class _SearchState extends State<HelpScreen>
 
   @override
   Widget build(BuildContext context) {
-    bool showHelpScreen = Provider.of<MapState>(context).showHelpScreen;
+    MapState mapState = Provider.of<MapState>(context);
     _offsetAnimation = Tween<Offset>(
-      begin: showHelpScreen ? Offset(1.0, 0.0) : Offset(-1.0, 0.0),
+      begin: mapState.showHelpScreen ? Offset(1.0, 0.0) : Offset(-1.0, 0.0),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _animationController,
@@ -356,10 +356,9 @@ class _SearchState extends State<HelpScreen>
                   onPressed: () {
                     setState(() {
                       _animationController.reverse();
-                      Provider.of<MapState>(context, listen: false)
-                          .setShowHelpScreen(false);
-                      Provider.of<MapState>(context, listen: false)
-                          .setShowIcon(true);
+                      mapState.setShowHelpScreen(false);
+                      mapState.setShowIcon(true);
+                      mapState.setShowTextButton(true);
                     });
                   },
                 )),

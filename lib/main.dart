@@ -8,8 +8,8 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => MapState()),
-        ChangeNotifierProvider(create: (_) => AppBarStateManager()),
+        ChangeNotifierProvider(create: (context) => MapState()),
+        ChangeNotifierProvider(create: (context) => AppBarStateManager()),
       ],
       child: App(),
     ),
@@ -27,7 +27,6 @@ class App extends StatelessWidget {
       darkTheme: ThemeData.dark(),
       routes: {
         '/': (context) => MapScreen(),
-        // Thêm các routes khác nếu cần
       },
       title: 'Dự án',
     );
