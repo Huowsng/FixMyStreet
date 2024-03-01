@@ -5,12 +5,15 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 
+import '../../../models/constants.dart';
+
 class MapControllerHelper {
   static final MapControllerHelper _instance = MapControllerHelper._internal();
   List<String> ids = [];
   Map<String, String> idTitleMap = {};
   List<Map<String, dynamic>> pinDetails = [];
   List<GeoPoint> ListGeoPoint = [];
+  List<Pin> pinData = [];
   late MapController mapController;
   factory MapControllerHelper() {
     return _instance;
@@ -35,7 +38,7 @@ class MapControllerHelper {
   Future<void> currentLocation() async {
     mapController.enableTracking();
     mapController.currentLocation();
-    mapController.setZoom(zoomLevel: 17);
+    mapController.setZoom(zoomLevel: 14);
   }
 
   Future<void> changeLocation(lat, long) async {
@@ -90,11 +93,24 @@ class MapControllerHelper {
   }
 
   Future<void> getReport() async {
+    List<Pin> mockPins = [
+      Pin(
+          latitude: 16.073545,
+          longitude: 108.214031,
+          id: "1",
+          title: "145-141 Quang Trung, Hải Châu, Đà Nẵng"),
+      Pin(
+          latitude: 16.074000,
+          longitude: 108.215721,
+          id: "2",
+          title: "134 Quang Trung")
+    ];
     List<GeoPoint> geoPoints = await mapController.geopoints;
-    List<dynamic> pins = await getData();
-    for (List<dynamic> pin in pins) {
-      double latitude = pin[0];
-      double longitude = pin[1];
+    pinData.clear();
+    for (Pin pin in mockPins) {
+      pinData.add(pin);
+      double latitude = pin.latitude;
+      double longitude = pin.longitude;
       geoPoints.add(GeoPoint(latitude: latitude, longitude: longitude));
       ListGeoPoint.add(GeoPoint(latitude: latitude, longitude: longitude));
       GeoPoint p = GeoPoint(latitude: latitude, longitude: longitude);

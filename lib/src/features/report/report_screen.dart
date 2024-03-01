@@ -153,7 +153,7 @@ class _ReportScreenState extends State<ReportScreen> {
         ));
   }
 
-  Container buildBody4(BuildContext context) {
+  Container buildBody4(context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       width: screenWidth,
@@ -212,7 +212,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Container buildBody5(BuildContext context) {
+  Container buildBody5(context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       width: screenWidth,

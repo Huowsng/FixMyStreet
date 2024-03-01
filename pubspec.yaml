@@ -51,6 +51,7 @@ dependencies:
   provider: ^6.1.1
   image_picker: ^1.0.7
   dropdown_textfield: ^1.0.8
+  shared_preferences: ^2.2.2
 
 
 dev_dependencies:

@@ -1,15 +1,16 @@
 import 'package:fixmystreet/src/assets/icons/icon.dart';
-import 'package:fixmystreet/src/component/icon_widget.dart';
-import 'package:fixmystreet/src/features/auth/login_screen.dart';
-import 'package:fixmystreet/src/features/help/help_screen.dart';
-import 'package:fixmystreet/src/features/map/controllers/map_controller.dart';
-import 'package:fixmystreet/src/features/map/components/map_search.dart';
-import 'package:fixmystreet/src/features/report/report_screen.dart';
-import 'package:fixmystreet/src/providers/map_states.dart';
+import 'package:fixmystreet/src/features/auth/constants.dart';
+import 'package:fixmystreet/src/features/draft/constants.dart';
+import 'package:fixmystreet/src/features/map/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:provider/provider.dart';
-import '../../providers/appbar_states.dart';
+import '../../component/constants.dart';
+import '../../models/constants.dart';
+import '../../providers/constants.dart';
+import '../../services/draft_service.dart';
+import '../help/constants.dart';
+import '../report/constants.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  final Draft draftModel = Draft();
   double screenHeight = 0.0;
   double screenWidth = 0.0;
   bool isLocationAvailable = false;
@@ -42,7 +44,7 @@ class _MapScreenState extends State<MapScreen> {
     try {
       mapController.mapController.osmBaseController.getZoom();
       mapController.displayCurrentLocation();
-      await Future.delayed(const Duration(seconds: 5));
+      await Future.delayed(const Duration(seconds: 2));
       mapController.mapController.listenerRegionIsChanging
           .addListener(() async {
         if (mapController.mapController.listenerRegionIsChanging.value !=
@@ -53,6 +55,15 @@ class _MapScreenState extends State<MapScreen> {
           mapController.getData();
           await Future.delayed(const Duration(seconds: 1));
           mapController.getReport();
+        }
+      });
+      mapController.mapController.listenerMapSingleTapping
+          .addListener(() async {
+        if (mapController.mapController.listenerMapSingleTapping.value !=
+            null) {
+          setState(() {
+            mapState.setShowPinDetail(false);
+          });
         }
       });
       print("Time Current: ${DateTime.now().millisecond}");
@@ -72,12 +83,12 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    mapState = Provider.of<MapState>(context, listen: false);
+    mapState = Provider.of<MapState>(context, listen: true);
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
     double appBarHeight = kToolbarHeight;
     double bodyHeight = screenHeight - appBarHeight;
-    appBarState = Provider.of<AppBarStateManager>(context, listen: false);
+    appBarState = Provider.of<AppBarStateManager>(context, listen: true);
     currentAppBarState = appBarState.appBarState;
     // Brightness currentBrightness = MediaQuery.of(context).platformBrightness;
     return Scaffold(
@@ -199,7 +210,7 @@ class _MapScreenState extends State<MapScreen> {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                        color: Color.fromARGB(255, 211, 190, 7),
+                        color: AppColors.appBarColor,
                         border: Border.all(
                           color: Colors.black, // Màu sắc của đường viền
                           width: 0.5, // Độ dày của đường viền
@@ -215,8 +226,8 @@ class _MapScreenState extends State<MapScreen> {
                             : (appBarState.appBarState == 2
                                 ? "Xác thực vị trí"
                                 : ""),
-                        style: TextStyle(
-                          color: Colors.black,
+                        style: const TextStyle(
+                          color: AppColors.black,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -254,9 +265,39 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           Visibility(
-              visible: mapState.showLogin,
+            visible: mapState.showLogin,
+            child: Consumer<MapState>(
+              builder: (context, mapState, child) {
+                return Positioned(child: LoginScreen());
+              },
+            ),
+          ),
+          Visibility(
+              visible: mapState.showRegister,
               child: Positioned(
-                child: LoginScreen(),
+                child: Consumer<MapState>(
+                  builder: (context, mapState, child) {
+                    return RegisterScreen();
+                  },
+                ),
+              )),
+          Visibility(
+              visible: mapState.showPinDetail,
+              child: Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: screenHeight * 0.8,
+                  child: bottomDetailsSheet(selectedPinId, selectedPinTitle),
+                ),
+              )),
+          Visibility(
+              visible: mapState.showDraft,
+              child: Positioned(
+                child: Consumer<MapState>(builder: (context, mapState, child) {
+                  return DraftScreen();
+                }),
               ))
         ],
       ),
@@ -266,61 +307,67 @@ class _MapScreenState extends State<MapScreen> {
 // ///////////////////////////////////////////
 
   void handleGeoPointClicked(GeoPoint geoPoint) {
-    for (Map<String, dynamic> pinDetail in mapController.pinDetails) {
-      double lat = pinDetail['lat'];
-      double long = pinDetail['long'];
-
+    for (Pin pin in mapController.pinData) {
+      double lat = pin.latitude;
+      double long = pin.longitude;
+      print(pin.id);
       if (lat == geoPoint.latitude && long == geoPoint.longitude) {
-        String id = pinDetail['id'];
-        String title = pinDetail['title'];
-
-        // Thay thế showDialog bằng DraggableScrollableSheet
-        showModalBottomSheet(
-          context: context,
-          builder: (BuildContext context) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.5, // Kích thước ban đầu của sheet
-              minChildSize: 0.2, // Kích thước tối thiểu của sheet
-              maxChildSize: 0.8, // Kích thước tối đa của sheet
-              builder:
-                  (BuildContext context, ScrollController scrollController) {
-                return Container(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Báo cáo: $title',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      SizedBox(height: 10),
-                      GestureDetector(
-                        onTap: () async {},
-                        child: const Text(
-                          'Chi tiết',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.blue,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                      // Thêm nội dung khác của bạn vào đây
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        );
+        String id = pin.id;
+        String title = pin.title;
 
         setState(() {
+          mapState.setShowPinDetail(true);
           selectedPoint = geoPoint;
           selectedPinId = id;
           selectedPinTitle = title;
         });
       }
     }
+  }
+
+  Widget bottomDetailsSheet(String id, String title) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.3,
+      minChildSize: 0.2,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (BuildContext context, ScrollController scrollController) {
+        return Stack(
+          alignment: AlignmentDirectional.topCenter,
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+                top: -10,
+                child: Container(
+                  width: 100,
+                  height: 7,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.black),
+                )),
+            Positioned(
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                ),
+                child: ListView(
+                  controller: scrollController,
+                  children: <Widget>[
+                    Text('ID: $id'),
+                    Text('Title: $title'),
+                    Text('Title: $title'),
+                    Text('Title: $title'),
+                    // Thêm các widget khác cần thiết tại đây
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void changeAppBarState(context, int newState) {
@@ -343,6 +390,10 @@ class _MapScreenState extends State<MapScreen> {
         return buildAppBarState5(context);
       case 6:
         return buildAppBarStateLogin(context);
+      case 7:
+        return buildAppBarStateRegister(context);
+      case 8:
+        return buildAppBarStateDraft(context);
       default:
         return buildAppBarState1(context);
     }
@@ -355,7 +406,7 @@ class _MapScreenState extends State<MapScreen> {
       leading: buildAppBarLeadingDefault(context, screenWidth, screenHeight),
       centerTitle: true,
       title: buildAppBarTitle(screenWidth),
-      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      backgroundColor: AppColors.appBarColor,
       actions: <Widget>[
         buildAppBarAcctionDefault(context, screenWidth, screenHeight),
       ],
@@ -367,7 +418,7 @@ class _MapScreenState extends State<MapScreen> {
       leading: buildAppBarLeadingBack(context, screenWidth, screenHeight),
       centerTitle: true,
       title: buildAppBarTitle(screenWidth),
-      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      backgroundColor: AppColors.appBarColor,
     );
   }
 
@@ -376,7 +427,7 @@ class _MapScreenState extends State<MapScreen> {
       leading: buildAppBarLeadingBack(context, screenWidth, screenHeight),
       centerTitle: true,
       title: buildAppBar3(screenWidth),
-      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      backgroundColor: AppColors.appBarColor,
       actions: <Widget>[
         buildAppBarAcction3(context, screenWidth, screenHeight),
       ],
@@ -388,7 +439,7 @@ class _MapScreenState extends State<MapScreen> {
       leading: buildAppBarLeadingBack(context, screenWidth, screenHeight),
       centerTitle: true,
       title: buildAppBar4(screenWidth),
-      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      backgroundColor: AppColors.appBarColor,
       actions: <Widget>[
         buildAppBarAcction4(context, screenWidth, screenHeight),
       ],
@@ -400,7 +451,7 @@ class _MapScreenState extends State<MapScreen> {
       leading: buildAppBarLeadingBack(context, screenWidth, screenHeight),
       centerTitle: true,
       title: buildAppBar5(screenWidth),
-      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      backgroundColor: AppColors.appBarColor,
     );
   }
 
@@ -409,7 +460,25 @@ class _MapScreenState extends State<MapScreen> {
       leading: buildAppBarLeadingLogin(context, screenWidth, screenHeight),
       title: buildAppBarTitleLogin(screenWidth),
       centerTitle: true,
-      backgroundColor: Color.fromARGB(255, 247, 200, 73),
+      backgroundColor: AppColors.appBarColor,
+    );
+  }
+
+  AppBar buildAppBarStateRegister(context) {
+    return AppBar(
+      leading: buildAppBarLeadingLogin(context, screenWidth, screenHeight),
+      title: buildAppBarTitleRegister(screenWidth),
+      centerTitle: true,
+      backgroundColor: AppColors.appBarColor,
+    );
+  }
+
+  AppBar buildAppBarStateDraft(context) {
+    return AppBar(
+      leading: buildAppBarLeadingLogin(context, screenWidth, screenHeight),
+      title: buildAppBarTitleDraft(screenWidth),
+      centerTitle: true,
+      backgroundColor: AppColors.appBarColor,
     );
   }
 
@@ -418,6 +487,28 @@ class _MapScreenState extends State<MapScreen> {
       width: screenWidth * 0.33, // 1/3 của AppBar
       child: Text(
         'Đăng nhập',
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget buildAppBarTitleRegister(double screenWidth) {
+    return Container(
+      width: screenWidth * 0.33, // 1/3 của AppBar
+      child: Text(
+        'Đăng kí',
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget buildAppBarTitleDraft(double screenWidth) {
+    return Container(
+      width: screenWidth * 0.33, // 1/3 của AppBar
+      child: Text(
+        'Bản nháp',
         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         textAlign: TextAlign.center,
       ),
@@ -435,7 +526,7 @@ class _MapScreenState extends State<MapScreen> {
           bottom: screenHeight * 0.01),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Color.fromARGB(255, 211, 181, 47),
+        color: AppColors.appBarColorComponent,
       ),
       child: GestureDetector(
         onTap: () {},
@@ -446,9 +537,11 @@ class _MapScreenState extends State<MapScreen> {
             ),
             onPressed: () {
               setState(() {
-                if (appBarState.appBarState == 6) {
+                if (appBarState.appBarState > 5) {
                   changeAppBarState(context, 1);
                   mapState.setShowLogin(false);
+                  mapState.setShowRegister(false);
+                  mapState.setShowDraft(false);
                 }
               });
             }),
@@ -508,28 +601,53 @@ class _MapScreenState extends State<MapScreen> {
           EdgeInsets.only(left: screenWidth * 0.02, bottom: screenWidth * 0.02),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(0),
-        color: Color.fromARGB(255, 228, 197, 61),
+        color: AppColors.appBarColorComponent,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
         child: GestureDetector(
-          onTap: () {},
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          onTap: () {
+            mapState.setShowDraft(true);
+            appBarState.setAppBarState(8);
+          },
+          child: Stack(
             children: [
-              const Expanded(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Tài khoản',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.account_circle),
-                onPressed: () {
-                  // Xử lý khi nhấn vào biểu tượng tài khoản
+              Icon(Icons.drafts, size: 50), // Biểu tượng
+              FutureBuilder<int>(
+                future: DraftService.getDraftCount(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(); // Hiển thị gì đó khi đang đợi dữ liệu
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    final draftCount = snapshot.data;
+                    return draftCount! >= 0
+                        ? Positioned(
+                            right: 0,
+                            child: Container(
+                              padding: EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              constraints: BoxConstraints(
+                                minWidth: 20,
+                                minHeight: 20,
+                              ),
+                              child: Text(
+                                '$draftCount',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
+                        : Container();
+                  }
                 },
               ),
             ],
@@ -542,14 +660,14 @@ class _MapScreenState extends State<MapScreen> {
   Widget buildAppBarAcctionDefault(
       context, double screenWidth, double screenHeight) {
     return Container(
-      width: screenWidth * 0.23,
-      height: screenHeight * 0.05,
+      width: screenWidth * 0.25,
+      height: screenHeight * 0.055,
       margin: EdgeInsets.only(
         right: 5,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Color.fromARGB(255, 211, 181, 47),
+        color: AppColors.appBarColorComponent,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -586,7 +704,7 @@ class _MapScreenState extends State<MapScreen> {
           bottom: screenHeight * 0.01),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Color.fromARGB(255, 211, 181, 47),
+        color: AppColors.appBarColorComponent,
       ),
       child: GestureDetector(
         onTap: () {},
@@ -627,7 +745,7 @@ class _MapScreenState extends State<MapScreen> {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Color.fromARGB(255, 211, 181, 47),
+        color: AppColors.appBarColorComponent,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -663,7 +781,7 @@ class _MapScreenState extends State<MapScreen> {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Color.fromARGB(255, 211, 181, 47),
+        color: AppColors.appBarColorComponent,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -673,10 +791,10 @@ class _MapScreenState extends State<MapScreen> {
               changeAppBarState(context, 5);
             });
           },
-          child: Row(
+          child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'Tiếp theo',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),

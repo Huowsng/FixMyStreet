@@ -8,6 +8,10 @@ class MapState with ChangeNotifier {
   bool _showReportScreen = false;
   bool _showLogin = false;
   bool _showRegister = false;
+  bool _showPinDetail = false;
+  bool _showDraft = false;
+  bool get showDraft => _showDraft;
+  bool get showPinDetail => _showPinDetail;
   bool get showLogin => _showLogin;
   bool get showIcon => _showIcon;
   bool get showHelpScreen => _showHelpScreen;
@@ -15,6 +19,7 @@ class MapState with ChangeNotifier {
   bool get showTextButoon => _showTextButton;
   bool get showReportScreen => _showReportScreen;
   bool get showRegister => _showRegister;
+  
   void setShowHelpScreen(bool value) {
     _showHelpScreen = value;
     notifyListeners();
@@ -47,6 +52,16 @@ class MapState with ChangeNotifier {
 
   void setShowRegister(bool value) {
     _showRegister = value;
+    notifyListeners();
+  }
+
+  void setShowPinDetail(bool value) {
+    _showPinDetail = value;
+    notifyListeners();
+  }
+
+  void setShowDraft(bool value) {
+    _showDraft = value;
     notifyListeners();
   }
 }

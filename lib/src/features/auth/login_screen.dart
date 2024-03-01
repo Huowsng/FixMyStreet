@@ -1,4 +1,4 @@
-import 'package:fixmystreet/src/providers/map_states.dart';
+import 'package:fixmystreet/src/providers/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,10 +17,12 @@ class _LoginScreenState extends State<LoginScreen> {
   late Color backgroundColor;
   late Color textColor;
   @override
-  Widget build(BuildContext context) {
+  Widget build(context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
-    MapState mapState = Provider.of<MapState>(context, listen: false);
+    AppBarStateManager appBarState =
+        Provider.of<AppBarStateManager>(context, listen: true);
+    MapState mapState = Provider.of<MapState>(context, listen: true);
     Brightness currentBrightness = MediaQuery.of(context).platformBrightness;
     backgroundColor = currentBrightness == Brightness.light
         ? Colors.white // Chọn màu cho chế độ sáng
@@ -102,7 +104,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(fontSize: 20),
                               ),
                               onPressed: () {
-                                //signup screen
+                                appBarState.setAppBarState(7);
+                                mapState.setShowLogin(false);
+                                mapState.setShowRegister(true);
                               },
                             )
                           ],
